@@ -1,13 +1,37 @@
+/**
+ * Transaction info
+ */
+interface TransactionInfo {
+    hash: string,
+    from?: string,
+    to: string,
+    amount: string,
+    token:string,
+    status:string
+}
 
+/**
+ * Payment match
+ */
+interface PaymentMatch {
+    expected: string,
+    received: string,
+    matches: boolean
+}
 
+/**
+ * Verify a transaction result
+ */
 export interface VerifyTraxnResult{
     verified: boolean,
-    transaction: {
-      hash: string,
-      from: string,
-      to: string,
-      amount: string,
-      token:string,
-      status: boolean
-    }
+    transaction: TransactionInfo
+}
+
+/**
+ * Verify a payment result
+ */
+export interface VerifyPaymentResult {
+  verified: boolean;
+  transaction: TransactionInfo;
+  payment_match: PaymentMatch;
 }

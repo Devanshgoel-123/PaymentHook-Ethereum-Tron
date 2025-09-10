@@ -1,8 +1,7 @@
-import { createMontioringSessionForAddress } from "../../services/montior";
+import { createMontioringSessionForAddress, getMerchantOrderStatus } from "../../services/montior";
 import { Request, Response } from "express";
-import { BAD_REQUEST_CODE, INTERNAL_ERROR_CODE } from "../../utils/constants";
+import { BAD_REQUEST_CODE, INTERNAL_ERROR_CODE, SUCCESS_CODE } from "../../utils/constants";
 import { completeMerchantOrderTracking } from "../../services/montior";
-import { trackTransactionByHash } from "../../services/verify";
 /**
  * Create a merchant order session
  * @param req 
@@ -16,26 +15,15 @@ export const CreateMerchantOrderSessions=async (req:Request, res:Response) => {
             return res.status(BAD_REQUEST_CODE).json({message: "Invalid request"});
         }
         const session = await createMontioringSessionForAddress(address, amount, token, chain);
-        res.status(200).json(session);
-    }catch(err){
-        return res.status(INTERNAL_ERROR_CODE).json({message: "Internal server error"});
-    }
-}
-
-/**
- * Track a transaction by hash
- * @param req 
- * @param res 
- * @returns 
- */
-export const TrackTransactionByHash=async (req:Request, res:Response) => {
-    try{
-        const {hash} = req.body;
-        const response=await trackTransactionByHash(hash);
-        if(!hash){
-            return res.status(BAD_REQUEST_CODE).json({message: "Invalid request"});
+        const resultObject={
+            sessionId:session,
+            address:address,
+            expectedAmount:amount,
+            status:"pending"
         }
-        return res.status(200).json(response);
+        res.status(200).json({
+            result:resultObject
+        });
     }catch(err){
         return res.status(INTERNAL_ERROR_CODE).json({message: "Internal server error"});
     }
@@ -57,6 +45,23 @@ export const CompleteMerchantOrderTracking=async (req:Request, res:Response) => 
           })
          console.log(result);
     res.status(200).send("Hello World");
+    }catch(err){
+        return res.status(INTERNAL_ERROR_CODE).json({message: "Internal server error"});
+    }
+}
+
+
+export const GetMerchantOrderStatus=async (req:Request, res:Response) => {
+    try{
+        const {sessionId} = req.params;
+        if(!sessionId){
+            return res.status(BAD_REQUEST_CODE).json({message: "Incorrect Session ID"});
+        } 
+        const status = await getMerchantOrderStatus(Number(sessionId));
+        if(!status){
+            return res.status(INTERNAL_ERROR_CODE).json({message: "Session not found"});
+        }
+        res.status(SUCCESS_CODE).json({status:status});
     }catch(err){
         return res.status(INTERNAL_ERROR_CODE).json({message: "Internal server error"});
     }
