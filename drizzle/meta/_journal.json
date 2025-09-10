@@ -15,6 +15,13 @@
       "when": 1757512873445,
       "tag": "0001_romantic_lilith",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757526501475,
+      "tag": "0002_familiar_karnak",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,28 @@
+import { Router } from "express";
+import { Request, Response } from "express";
+import { CompleteMerchantOrderTracking } from "./webhookHandler";
+import { INTERNAL_ERROR_CODE, SUCCESS_CODE } from "../utils/constants";
+export const webhookRouter = Router();
+
+/**
+ * Webhook update
+ */
+webhookRouter.post("/webhookUpdate", async (req: Request, res: Response) => {
+  console.log(req.body.matchingTransactions);
+  try {
+    const matchingTransactions = req.body.matchingTransactions;
+    const result = await CompleteMerchantOrderTracking(matchingTransactions);
+    if (!result) {
+      return res.status(INTERNAL_ERROR_CODE).send({
+        message: "Webhook updated failed",
+      });
+    }
+    res.status(SUCCESS_CODE).send({
+      message: "Webhook updated successfully",
+    });
+  } catch (err) {
+    return res.status(INTERNAL_ERROR_CODE).send({
+      message: "Webhook updated failed",
+    });
+  }
+});

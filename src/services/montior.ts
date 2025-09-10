@@ -1,25 +1,24 @@
 import { MonitoringSessions } from "../db/schema";
 import { db } from "../db/db";
-import { TRANSACTIONS_CONFIRMATIONS_ETHEREUM, TRANSACTIONS_CONFIRMATIONS_TRON } from "../utils/constants";
-
+import { and, eq } from "drizzle-orm";
+import { findValueOfToken } from "./EthereumService";
+import { amountMatches } from "./EthereumService";
 /**
  * Create a monitoring session for an address
  * @param address 
  */
 export const createMontioringSessionForAddress=async(address:string, amount:string, token:string, chain:number):Promise<number | null>=>{
     try{
-        const txConfirmationsRequired = chain === 1 ? TRANSACTIONS_CONFIRMATIONS_ETHEREUM : TRANSACTIONS_CONFIRMATIONS_TRON;
         const session = await db.insert(MonitoringSessions).values({
             address:address,
             amount: amount,
             token: token,
             chainId: chain,
-            txConfirmationsRequired:txConfirmationsRequired,
-            txConfirmations:0,
             txHash:"",
             status:"pending",
             createdAt:new Date(),
             updatedAt:new Date(),
+            receivedAmount:"0",
         }).returning()
         if(!session[0]){
             return null;
@@ -32,3 +31,38 @@ export const createMontioringSessionForAddress=async(address:string, amount:stri
 }
 
 
+
+
+/**
+ * Complete merchant order tracking
+ * @param hash 
+ */
+export const completeMerchantOrderTracking=async(hash:string, address:string, amount:string)=>{
+    try{
+        const humanAmount = await findValueOfToken(amount);
+        if(!humanAmount){
+            console.error("error finding value of token in human format");
+            return;
+        }
+        const sessions = await db.select().from(MonitoringSessions).where(
+            and(
+              eq(MonitoringSessions.address, address),
+              eq(MonitoringSessions.status, "pending"),
+            )
+          );
+          for (const session of sessions) {
+            if (amountMatches(humanAmount, Number(session.amount))) {
+              await db.update(MonitoringSessions)
+                .set({
+                  status: "completed",
+                  updatedAt: new Date(),
+                  txHash: hash,
+                  receivedAmount: humanAmount.toString(),
+                })
+                .where(eq(MonitoringSessions.id, session.id));
+            }
+          }
+    }catch(err){
+        console.error("error completing merchant order tracking", err);
+    }
+}
