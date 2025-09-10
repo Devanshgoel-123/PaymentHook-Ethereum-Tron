@@ -1,7 +1,8 @@
 import axios from "axios";
 import { BASE_QUICK_NODE_URL, TEMPLATE_ID } from "../utils/constants";
 import { ethers } from "ethers";
-
+import {config} from "dotenv";
+config();
 const QUICKNODE_ETHEREUM_HEADERS={
   accept: "application/json",
   "Content-Type": "application/json",
@@ -13,7 +14,7 @@ const QUICKNODE_ETHEREUM_PAYLOAD={
   network: "ethereum-mainnet",
   notification_email: "devanshgoel112233@gmail.com",
   destination_attributes: {
-    url: "https://7fb9f5a792a3.ngrok-free.app",
+    url: `${process.env.BACKEND_URL}`,
     compression: "gzip",
   },
   status: "active",
