@@ -1,7 +1,9 @@
-import { createMontioringSessionForAddress, getMerchantOrderStatus } from "../../services/montior";
+import { getMerchantOrderStatus } from "../../services/montior";
 import { Request, Response } from "express";
 import { BAD_REQUEST_CODE, INTERNAL_ERROR_CODE, SUCCESS_CODE } from "../../utils/constants";
 import { completeMerchantOrderTracking } from "../../services/montior";
+import { ethereumProvider } from "../../index";
+import { CHAIN_ID_ETHEREUM } from "../../utils/config";
 /**
  * Create a merchant order session
  * @param req 
@@ -14,14 +16,18 @@ export const CreateMerchantOrderSessions=async (req:Request, res:Response) => {
         if(!address || !amount || !token || !chain){
             return res.status(BAD_REQUEST_CODE).json({message: "Invalid request"});
         }
-        const session = await createMontioringSessionForAddress(address, amount, token, chain);
+        const provider= chain === CHAIN_ID_ETHEREUM ? ethereumProvider : null
+        if(!provider){
+            return res.status(INTERNAL_ERROR_CODE).json({message: "Provider not found"});
+        }
+        const session = await provider.RegisterMonitoringSession(address, amount,token);
         const resultObject={
             sessionId:session,
             address:address,
             expectedAmount:amount,
             status:"pending"
         }
-        res.status(200).json({
+        res.status(SUCCESS_CODE).json({
             result:resultObject
         });
     }catch(err){
@@ -44,7 +50,7 @@ export const CompleteMerchantOrderTracking=async (req:Request, res:Response) => 
             return await completeMerchantOrderTracking(hash, address, input);
           })
          console.log(result);
-    res.status(200).send("Hello World");
+    res.status(SUCCESS_CODE).send("Hello World");
     }catch(err){
         return res.status(INTERNAL_ERROR_CODE).json({message: "Internal server error"});
     }

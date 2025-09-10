@@ -8,7 +8,7 @@ export interface GeneralProvider {
     webhookId:string;
     USDT_ADDRESS:string;
     
-    RegisterWebhook:()=>Promise<void>;
+    RegisterWebhook:()=>Promise<boolean>;
 
     UpdateWebhook:(userAddress:string)=>Promise<void>;
 
@@ -17,6 +17,8 @@ export interface GeneralProvider {
     DeleteWebhook:(webhookId:string)=>Promise<void>;
 
     VerifyTransaction:(hash:string)=>Promise<VerifyTraxnResult | null>;
+
+    RegisterMonitoringSession:(address:string, amount:string, token:string)=>Promise<number | null>;
 }
 
 export class ExchangeFactory {

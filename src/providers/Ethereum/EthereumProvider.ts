@@ -1,38 +1,49 @@
 import { config } from "dotenv";
 import { GeneralProvider } from "../GeneralProvider";
-import { USDT_TOKEN_ETHEREUM } from "../../utils/config";
+import { CHAIN_ID_ETHEREUM, USDT_TOKEN_ETHEREUM } from "../../utils/config";
 import { registerWebhook } from "../../services/EthereumService";
 import { trackTransactionByHash } from "../../services/verify";
 import { VerifyTraxnResult } from "../../utils/types";
 import { updateWebhook, pauseWebhook, deleteWebhook } from "../../services/EthereumService";
+import { createMontioringSessionForAddress } from "../../services/montior";
 config();
 
 export class EthereumProvider implements GeneralProvider {
-  chaindId: number = 1;
+  chaindId: number = CHAIN_ID_ETHEREUM;
   webhookId: string = "";
   USDT_ADDRESS: string = USDT_TOKEN_ETHEREUM;
 
   /**
    * Register a webhook
    */
-  async RegisterWebhook(): Promise<void> {
+  async RegisterWebhook(): Promise<boolean> {
     try{
         const result = await registerWebhook();
         if(!result){
           throw new Error("Failed to register webhook");
         }
         this.webhookId = result;
+        return true;
     }catch(err){
       console.error("Error registering webhook", err);
-      throw new Error("Failed to register webhook");
+      return false;
     }
   }
 
   /**
    * Create a monitoring session
    */
-  async CreateMonitoringSession(): Promise<void> {
-    throw new Error("Method not implemented.");
+  async RegisterMonitoringSession(address:string, amount:string, token:string): Promise<number | null> {
+    try{
+      const result=await createMontioringSessionForAddress(address, amount, token, this.chaindId);
+      if(!result){
+        throw new Error("Failed to register monitoring session");
+      }
+      return result;
+    }catch(err){
+      console.error("Error registering monitoring session", err);
+      return null;
+    }
   }
 /**
  * Update a webhook
