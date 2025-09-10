@@ -44,11 +44,11 @@ export const createMontioringSessionForAddress = async (
  */
 export const completeMerchantOrderTracking = async (
   hash: string,
-  address: string,
-  amount: string
+  tokenAddress: string,
+  input: string
 ) => {
   try {
-    const humanAmount = await findValueOfToken(amount);
+    const humanAmount = await findValueOfToken(input);
     if (!humanAmount) {
       console.error("error finding value of token in human format");
       return;
@@ -58,7 +58,7 @@ export const completeMerchantOrderTracking = async (
       .from(MonitoringSessions)
       .where(
         and(
-          eq(MonitoringSessions.address, address),
+          eq(MonitoringSessions.token, tokenAddress),
           eq(MonitoringSessions.status, "pending")
         )
       );

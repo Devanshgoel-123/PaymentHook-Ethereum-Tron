@@ -56,7 +56,12 @@ export const CompleteMerchantOrderTracking=async (req:Request, res:Response) => 
     }
 }
 
-
+/**
+ * Get merchant order status
+ * @param req 
+ * @param res 
+ * @returns 
+ */
 export const GetMerchantOrderStatus=async (req:Request, res:Response) => {
     try{
         const {sessionId} = req.params;

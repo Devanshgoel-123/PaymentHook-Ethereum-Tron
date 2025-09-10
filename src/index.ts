@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { merchantRouter } from "./Routes/Merchant";
 import { webhookRouter } from "./Routes/webhookRouter";
 import { verifyRouter } from "./Routes/Verify";
 import { monitorRouter } from "./Routes/Monitor";
 import { EthereumProvider } from "./providers/Ethereum/EthereumProvider";
+import { trackTransactionByHash } from "./services/verify";
 
 dotenv.config();
 
@@ -19,9 +19,9 @@ const ValidateEnvironmentVariables = () => {
   if(!process.env.DATABASE_URL){
     throw new Error("DATABASE_URL is not set");
   }
-  if(!process.env.BACKEND_URL){
-    throw new Error("BACKEND_URL is not set");
-  }
+  // if(!process.env.BACKEND_URL){
+  //   throw new Error("BACKEND_URL is not set");
+  // }
   
 }
 
@@ -33,12 +33,13 @@ export const ethereumProvider = new EthereumProvider();
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/merchant", merchantRouter);
+
 app.use("/api/webhook", webhookRouter);
 app.use("/api/verify", verifyRouter);
 app.use("/api/monitor", monitorRouter);
 
 
+trackTransactionByHash("0xdc3504685dedba632acb4092592ed60e92425780e30740b06f89c0e21bd0513f")
 
 app.listen(process.env.PORT, () => {
   try{

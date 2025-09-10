@@ -34,6 +34,8 @@ export const trackTransactionByHash=async(hash:string):Promise<VerifyTraxnResult
             return null;
           }
           const object=response.data.result;
+          console.log(response.data);
+          console.log(object);
           return {
             verified: true,
             transaction: {
