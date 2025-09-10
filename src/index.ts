@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { merchantRouter } from "./Routes/Merchant";
-import { webhookRouter } from "./webhooks/webhookRouter";
+import { webhookRouter } from "./Routes/webhookRouter";
 import { verifyRouter } from "./Routes/Verify";
 import { monitorRouter } from "./Routes/Monitor";
 import { INTERNAL_ERROR_CODE, SUCCESS_CODE } from "./utils/constants";
@@ -20,14 +20,7 @@ app.use("/api/webhook", webhookRouter);
 app.use("/api/verify", verifyRouter);
 app.use("/api/monitor", monitorRouter);
 
-app.post("/api/webhooks/ethereum", async (req: Request, res: Response) => {
-  try {
-    res.status(SUCCESS_CODE).send({ message: "Ethereum webhook processed" });
-  } catch (err) {
-    console.error("Error processing Ethereum webhook:", err);
-    res.status(INTERNAL_ERROR_CODE).send({ error: "Failed to process Ethereum webhook" });
-  }
-});
+
 
 app.post("/api/webhooks/tron", async (req: Request, res: Response) => {
   try {

@@ -1,4 +1,3 @@
-import { Request, Response } from "express";
 import { completeMerchantOrderTracking } from "../services/montior";
 /**
  * Complete merchant order tracking

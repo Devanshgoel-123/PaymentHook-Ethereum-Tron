@@ -1,22 +1,22 @@
-import { CHAIN_ID_ETHEREUM, CHAIN_ID_TRON } from "../utils/constants";
+import { CHAIN_ID_ETHEREUM, CHAIN_ID_TRON } from "../utils/config";
 import { EthereumProvider } from "./Ethereum/EthereumProvider";
-
+import { VerifyTraxnResult } from "../utils/types";
 
 
 export interface GeneralProvider {
     chaindId:number;
     webhookId:string;
-
+    USDT_ADDRESS:string;
+    
     RegisterWebhook:()=>Promise<void>;
 
-    UpdateWebhook:()=>Promise<void>;
+    UpdateWebhook:(userAddress:string)=>Promise<void>;
 
     PauseWebhook:()=>Promise<void>;
 
-    StartWebhook:()=>Promise<void>;
+    DeleteWebhook:(webhookId:string)=>Promise<void>;
 
-    DeleteWebhook:()=>Promise<void>;
-    // FetchAllWebhooks:()=>Promise<void>;
+    VerifyTransaction:(hash:string)=>Promise<VerifyTraxnResult | null>;
 }
 
 export class ExchangeFactory {
