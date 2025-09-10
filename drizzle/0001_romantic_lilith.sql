@@ -1,0 +1,1 @@
+ALTER TABLE "monitoring_sessions" ADD COLUMN "chainId" integer NOT NULL;
