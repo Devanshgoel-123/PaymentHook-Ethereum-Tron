@@ -32,8 +32,8 @@ webhookRouter.post("/webhookUpdate", async (req: Request, res: Response) => {
  */
 webhookRouter.post("/ethereum", async (req: Request, res: Response) => {
   try {
-    const result= await ethereumProvider.RegisterWebhook();
-    res.status(SUCCESS_CODE).send({ message: "Ethereum webhook processed" });
+    const result = await ethereumProvider.RegisterWebhook();
+    res.status(SUCCESS_CODE).send({ message: "Ethereum webhook processed", result });
   } catch (err) {
     console.error("Error processing Ethereum webhook:", err);
     res.status(INTERNAL_ERROR_CODE).send({ error: "Failed to process Ethereum webhook" });

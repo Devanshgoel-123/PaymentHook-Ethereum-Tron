@@ -8,6 +8,7 @@ import { activeUsers } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { CHAIN_ID_ETHEREUM } from "../utils/config";
 import { sql } from "drizzle-orm";
+import { webhooks } from "../db/schema";
 
 config();
 const QUICKNODE_ETHEREUM_HEADERS = {
@@ -314,4 +315,21 @@ export const decodeTransferLog = (
   const rawAmount: bigint = log.data ? BigInt(log.data) : 0n;
   const amount = ethers.formatUnits(rawAmount, decimals);
   return { from, to, amount, rawAmount };
+};
+
+/**
+ * Get webhook id from DB
+ * @param chainId
+ * @returns
+ */
+export const getWebhookIdFromDB = async (chainId: number) => {
+  try {
+    const result = await db.select().from(webhooks).where(eq(webhooks.chainId, chainId));
+    if(!result[0]) {
+      return null;
+    }
+    return result[0].webhookId;
+  } catch (err) {
+    console.error("Error:", err);
+  }
 };

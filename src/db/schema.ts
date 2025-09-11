@@ -1,5 +1,7 @@
 import { integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
-
+/**
+ * Monitoring sessions table
+ */
 export const MonitoringSessions=pgTable("monitoring_sessions", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     address: varchar({ length: 255 }).notNull(),
@@ -13,12 +15,26 @@ export const MonitoringSessions=pgTable("monitoring_sessions", {
     chainId:integer().notNull(),
   });
   
-
+/**
+ * Active users table
+ */
 export const activeUsers=pgTable("active_users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   address: varchar({ length: 255 }).notNull(),
   status: varchar({ length: 255 }).notNull().default("active"),
   count:integer().notNull().default(0),
   createdAt: timestamp().notNull().defaultNow(),
+  chainId:integer().notNull(),
+})
+
+/**
+ * Webhooks table
+ */
+export const webhooks=pgTable("webhooks", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  webhookId: varchar({ length: 255 }).notNull(),
+  createdAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp().notNull().defaultNow(),
+  status: varchar({ length: 255 }).notNull().default("active"),
   chainId:integer().notNull(),
 })

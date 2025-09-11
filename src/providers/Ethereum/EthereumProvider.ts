@@ -6,7 +6,9 @@ import { trackTransactionByHashEthereum } from "../../services/verify";
 import { VerifyTraxnResult } from "../../utils/types";
 import { updateWebhook, pauseWebhook, deleteWebhook, startWebhook } from "../../services/EthereumService";
 import { createMontioringSessionForAddress } from "../../services/montior";
-
+import { webhooks } from "../../db/schema";
+import { db } from "../../db/db";
+import { getWebhookIdFromDB } from "../../services/EthereumService";
 config();
 
 export class EthereumProvider implements GeneralProvider {
@@ -19,13 +21,30 @@ export class EthereumProvider implements GeneralProvider {
    */
   async RegisterWebhook(): Promise<boolean> {
     try{
-        const result = await registerWebhook();
-        if(!result){
-          throw new Error("Failed to register webhook");
+        const webhookId=await getWebhookIdFromDB(this.chaindId);
+        if(webhookId){
+          this.webhookId = webhookId;
+          const startResult=await this.StartWebhook()
+          if(!startResult){
+            console.error("Failed to start webhook");
+            return false;
+          }
+          return true;
+        }else{
+          const result = await registerWebhook();
+          if(!result){
+            throw new Error("Failed to register webhook");
+          }
+          const webhookResult=await db.insert(webhooks).values({
+            webhookId: result,
+            chainId: this.chaindId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            status: "active"
+          }).returning()
+          this.webhookId = result;
+          return true;
         }
-        console.log("result", result);
-        this.webhookId = result;
-        return true;
     }catch(err){
       console.error("Error registering webhook", err);
       return false;

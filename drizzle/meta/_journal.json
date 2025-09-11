@@ -36,6 +36,13 @@
       "when": 1757593582845,
       "tag": "0004_redundant_ultragirl",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1757619406088,
+      "tag": "0005_lowly_stingray",
+      "breakpoints": true
     }
   ]
 }
