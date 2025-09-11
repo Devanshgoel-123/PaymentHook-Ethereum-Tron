@@ -40,7 +40,6 @@ export const registerWebhook = async () => {
     const result = await axios.post(url, QUICKNODE_ETHEREUM_PAYLOAD, {
       headers: QUICKNODE_ETHEREUM_HEADERS,
     });
-    console.log(result.data);
     return result.data.id as string;
   } catch (err) {
     console.error("Error:", err);
@@ -104,7 +103,6 @@ export const pauseWebhook = async (webhookId: string) => {
       { status: "paused" },
       { headers: QUICKNODE_ETHEREUM_HEADERS }
     );
-    console.log(result.data);
     return result.data.id as string;
   } catch (err) {
     console.error("Error:", err);
@@ -137,7 +135,6 @@ export const deleteWebhook = async (webhookId: string) => {
     const result = await axios.delete(url, {
       headers: QUICKNODE_ETHEREUM_HEADERS,
     });
-    console.log(result.data);
     return result.data.id as string;
   } catch (err) {
     console.error("Error:", err);
@@ -150,7 +147,6 @@ export const GetWebhookInfo = async (webhookId: string) => {
     const result = await axios.get(url, {
       headers: QUICKNODE_ETHEREUM_HEADERS,
     });
-    console.log(result.data);
     return result.data.destination_attributes;
   } catch (err) {
     console.error("Error:", err);
@@ -169,7 +165,6 @@ export const findValueOfToken = (
       "function transfer(address to, uint256 value)",
     ]);
     const decoded = iface.decodeFunctionData("transfer", input);
-
     const valueInWei = decoded.value.toString(); // 300,000 (smallest units
     const valueInToken = convertValuetoHumanFormat(valueInWei);
     return {
@@ -293,4 +288,28 @@ export const insertUserInDB = async (
     console.error("Error inserting user:", err);
     throw err;
   }
+};
+
+
+/**
+ * Decode transfer log
+ * @param log
+ * @param decimals
+ * @returns
+ */
+export const decodeTransferLog = (
+  log: {
+    topics: string[];
+    data: string;
+  },
+  decimals: number
+) => {
+  if (!log || !log.topics || log.topics.length < 3) {
+    throw new Error("Invalid log: missing topics");
+  }
+  const from = "0x" + log.topics[1]?.slice(-40);
+  const to = "0x" + log.topics[2]?.slice(-40);
+  const rawAmount: bigint = log.data ? BigInt(log.data) : 0n;
+  const amount = ethers.formatUnits(rawAmount, decimals);
+  return { from, to, amount, rawAmount };
 };

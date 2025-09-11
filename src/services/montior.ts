@@ -4,6 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { amountMatches, decrementUserCountInDB } from "./EthereumService";
 import { MonitoringStatus } from "../utils/enum";
 import { CHAIN_ID_ETHEREUM } from "../utils/config";
+import { findActiveUsersAndInsertInDB } from "./EthereumService";
 /**
  * Create a monitoring session for an address
  * @param address
@@ -52,27 +53,26 @@ export const completeMerchantOrderTracking = async (
   receiverAddress: string
 ) => {
   try {
-    console.log("starting to complete merchant order tracking", hash, tokenAddress, humanAmount, chainId, receiverAddress);
     const sessions = await db
       .select()
       .from(MonitoringSessions)
       .where(
         and(
-          //  eq(MonitoringSessions.token, tokenAddress),
+          eq(MonitoringSessions.token, tokenAddress),
           eq(MonitoringSessions.status, MonitoringStatus.Monitoring),
           eq(MonitoringSessions.chainId, chainId),
           eq(MonitoringSessions.address, receiverAddress.toLowerCase()),
           eq(MonitoringSessions.status, MonitoringStatus.Monitoring)
         )
       );
-      console.log("sessions", sessions);
     for (const session of sessions) {
       await updateOrderStatusInDB(
         session.id,
         hash,
         humanAmount,
         Number(session.amount),
-        receiverAddress.toLowerCase()
+        receiverAddress.toLowerCase(),
+        chainId
       );
     }
   } catch (err) {
@@ -92,7 +92,8 @@ export const updateOrderStatusInDB = async (
   hash: string,
   receivedAmount: number,
   expectedAmount: number,
-  receiverAddress: string
+  receiverAddress: string,
+  chainId: number
 ): Promise<boolean> => {
   try {
     if (amountMatches(receivedAmount, expectedAmount)) {
@@ -111,7 +112,7 @@ export const updateOrderStatusInDB = async (
         ))
         .returning();
 
-    await decrementUserCountInDB(receiverAddress.toLowerCase(), CHAIN_ID_ETHEREUM);
+    await decrementUserCountInDB(receiverAddress.toLowerCase(), chainId);
       if (!result[0]) {
         return false;
       }

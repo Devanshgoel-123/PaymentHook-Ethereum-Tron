@@ -1,11 +1,14 @@
 import { GeneralProvider } from "../GeneralProvider";
 import { CHAIN_ID_TRON, USDT_TOKEN_TRON } from "../../utils/config";
 import { VerifyTraxnResult } from "../../utils/types";
-import { registerWebhookClientTron } from "../../services/TronService";
+import { getTronAdddress, registerWebhookClientTron } from "../../services/TronService";
 import { TronWeb } from "tronweb";
-import { createMontioringSessionForAddress, updateOrderStatusInDB } from "../../services/montior";
+import { completeMerchantOrderTracking, createMontioringSessionForAddress, updateOrderStatusInDB } from "../../services/montior";
 import { getActiveSessions } from "../../services/montior";
 import { processEventResult } from "../../services/TronService";
+import { updateWebHookTron } from "../../services/TronService";
+import { trackTransactionByHashTron } from "../../services/verify";
+
 
 export class TronProvider implements GeneralProvider {
   chaindId: number = CHAIN_ID_TRON;
@@ -28,7 +31,16 @@ export class TronProvider implements GeneralProvider {
   }
 
   async UpdateWebhook(_userAddress: string): Promise<boolean> {
-    return true;
+      try{
+        const result=await updateWebHookTron(_userAddress);
+        if(result){
+          return true;
+        }
+        return false
+      }catch(err){
+        console.error("Error updating webhook", err);
+        return false;
+      }
   }
 
   async PauseWebhook(): Promise<void> {
@@ -52,7 +64,7 @@ export class TronProvider implements GeneralProvider {
     token: string
   ): Promise<number | null> {
     try {
-      //no need to update webhook for tron, directly insert into the Database
+      this.UpdateWebhook(address);
       const result = await createMontioringSessionForAddress(
         address,
         amount,
@@ -70,12 +82,13 @@ export class TronProvider implements GeneralProvider {
   }
 
   async VerifyTransaction(_hash: string): Promise<VerifyTraxnResult | null> {
-    return null;
-    //  try{
-    //     const result=await 
-    //  }catch(err){
-
-    //  }
+     try{
+        const result=await trackTransactionByHashTron(_hash, this.client);
+        return result;
+     }catch(err){
+        console.error("Error verifying transaction", err);
+        return null;
+     }
   }
 
   private startPolling() {
@@ -92,12 +105,15 @@ export class TronProvider implements GeneralProvider {
     try {
       // 1. Get all active monitoring sessions from DB
       const sessions = await getActiveSessions(this.chaindId);
-      if (!sessions || sessions.length === 0) return;
+      if (!sessions || sessions.length === 0){
+        console.log("No active monitoring sessions");
+        return;
+      };
 
       const events = await this.client.getEventResult(this.USDT_ADDRESS, {
         eventName: "Transfer",
         onlyConfirmed: true,
-        limit: 200, //max-limit is 200
+        limit: 10, //max-limit is 200
       });
 
       const eventsFormatted = events.data
@@ -121,16 +137,13 @@ export class TronProvider implements GeneralProvider {
           this.processedTx.add(evt.hash);
           for (const session of sessions) {
             if (session.address.toLowerCase() === evt.to.toLowerCase()) {
-              const expected = Number(session.amount);
-              const tolerance = expected * 0.02;
-              if (Math.abs(evt.value - expected) <= tolerance) {
-                console.log(
-                  `Payment detected for ${session.address}: ${evt.value} USDT`
-                );
-              //  const result=await updateOrderStatusInDB(session.id, evt.hash, evt.value, expected);
-              //  if(!result){
-              //   console.error("Error updating order status in DB");
-              //  }
+              const expectedAmount = Number(session.amount);
+              const tolerance = expectedAmount * 0.02;
+              if (Math.abs(evt.value - expectedAmount) <= tolerance) {
+              const result=await updateOrderStatusInDB(session.id, evt.hash, evt.value, expectedAmount, evt.to.toLowerCase(), this.chaindId );
+               if(!result){
+                console.error("Error updating order status in DB");
+               }
               }
             }
           }

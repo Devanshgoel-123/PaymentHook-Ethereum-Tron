@@ -7,6 +7,7 @@ import { TronWeb } from "tronweb";
 import { MonitoringStatus } from "../utils/enum";
 import { amountMatches } from "./EthereumService";
 import { USDT_DECIMALS } from "../utils/config";
+import { findValueOfToken } from "./EthereumService";
 /**
  * Track a transaction by hash
  * @param hash
@@ -40,14 +41,15 @@ export const trackTransactionByHashEthereum = async (
       return null;
     }
     const object = response.data.result;
-    console.log("object", object);
+    const amount= findValueOfToken(object.input);
+
     return {
       verified: true,
       transaction: {
         hash: object.hash,
         from: object.from,
-        to: object.to,
-        amount: object.value,
+        to: amount?.receiver ? amount.receiver : "",
+        amount: amount?.amount ? amount.amount.toString() : "0",
         token: "USDT",
         status: MonitoringStatus.Completed,
       },
@@ -73,9 +75,8 @@ export const trackTransactionByHashTron = async (
       console.error("Client is not initialized");
       return null;
     }
-    const tx = await client.trx.getTransaction(hash);
+    const tx = await client.trx.getTransaction(hash)
     const info = await client.trx.getTransactionInfo(hash);
-
     const transferLog = info.log?.[0];
     if (!transferLog || !transferLog.topics || transferLog.topics.length < 3) {
       return null;

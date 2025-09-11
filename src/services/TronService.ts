@@ -1,7 +1,9 @@
 import { TronWeb } from "tronweb";
 import { config } from "dotenv";
-import ethers from "ethers";
 import { convertValuetoHumanFormat } from "./montior";
+import { findActiveUsersAndInsertInDB } from "./EthereumService";
+import { CHAIN_ID_TRON } from "../utils/config";
+import { incrementUserCountInDB, insertUserInDB } from "./EthereumService";
 config();
 /**
  * Register a webhook client for Tron
@@ -27,8 +29,8 @@ export const registerWebhookClientTron = () => {
  */
 export const processEventResult=(event:any)=>{
   try{
-    const from=event["0"];
-    const to=event["1"];
+    const from=getTronAdddress(event["0"]);
+    const to=getTronAdddress(event["1"]);
     const value=parseFloat(event["2"]);
     const valueInHumanFormat = convertValuetoHumanFormat(value)
     return {
@@ -39,6 +41,27 @@ export const processEventResult=(event:any)=>{
   }catch(err){
     console.error("Error processing event result",err);
     return null;
+  }
+}
+
+
+export const updateWebHookTron=async (userAddress:string)=>{
+  try{
+    const activeUsers = await findActiveUsersAndInsertInDB(CHAIN_ID_TRON);
+    const existingUser = activeUsers?.find(
+      (user) => user.address.toLowerCase() === userAddress.toLowerCase()
+    );
+    if(existingUser){
+      await incrementUserCountInDB(
+        existingUser.address.toLowerCase(),
+        CHAIN_ID_TRON
+      );
+      return true;
+    }else{
+      await insertUserInDB(userAddress.toLowerCase(), CHAIN_ID_TRON, 1);
+    }
+  }catch(err){
+    console.error("Error updating webhook",err);
   }
 }
 
@@ -107,3 +130,8 @@ export const processEventResult=(event:any)=>{
 //   };
 // };
 
+
+export const getTronAdddress=(userAddress:string)=>{
+  const result=TronWeb.address.fromHex(userAddress);
+  return result;
+}

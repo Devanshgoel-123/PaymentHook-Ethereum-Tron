@@ -17,7 +17,6 @@ export const CreateMerchantOrderSessions=async (req:Request, res:Response) => {
             return res.status(BAD_REQUEST_CODE).json({message: "Invalid request"});
         }
         const provider= chain === CHAIN_ID_ETHEREUM ? ethereumProvider : tronProvider;
-        console.log(provider.USDT_ADDRESS);
         if(!provider){
             return res.status(INTERNAL_ERROR_CODE).json({message: "Provider not found"});
         }
@@ -39,26 +38,6 @@ export const CreateMerchantOrderSessions=async (req:Request, res:Response) => {
     }
 }
 
-// /**
-//  * Complete merchant order tracking
-//  * @param req 
-//  * @param res 
-//  * @returns 
-//  */
-// export const CompleteMerchantOrderTracking=async (req:Request, res:Response) => {
-//     try{
-//         const result = await req.body.matchingTransactions.map(async (item:any)=>{
-//             const hash = item.hash;
-//             const input = item.input;
-//             const address = item.to;
-//             return await completeMerchantOrderTracking(hash, address, input);
-//           })
-//          console.log(result);
-//     res.status(SUCCESS_CODE).send("Hello World");
-//     }catch(err){
-//         return res.status(INTERNAL_ERROR_CODE).json({message: "Internal server error"});
-//     }
-// }
 
 /**
  * Get merchant order status

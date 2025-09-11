@@ -5,9 +5,9 @@ import { webhookRouter } from "./Routes/webhookRouter";
 import { verifyRouter } from "./Routes/Verify";
 import { monitorRouter } from "./Routes/Monitor";
 import { EthereumProvider } from "./providers/Ethereum/EthereumProvider";
-import { TronProvider } from "./providers/Tron/TronProvider";;
-import axios from "axios";
-import { trackTransactionByHashEthereum } from "./services/verify";
+import { TronProvider } from "./providers/Tron/TronProvider";import { trackTransactionByHashEthereum, trackTransactionByHashTron } from "./services/verify";
+import { registerWebhookClientTron } from "./services/TronService";
+;
 
 dotenv.config();
 
@@ -25,9 +25,12 @@ const ValidateEnvironmentVariables = () => {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is not set");
   }
-  // if(!process.env.BACKEND_URL){
-  //   throw new Error("BACKEND_URL is not set");
-  // }
+  if(!process.env.BACKEND_URL){
+    throw new Error("BACKEND_URL is not set");
+  }
+  if(!process.env.TRON_API_KEY){
+    throw new Error("TRON_API_KEY is not set");
+  }
 };
 
 const app = express();
@@ -46,10 +49,13 @@ app.use("/api/monitor", monitorRouter);
 app.listen(process.env.PORT, async () => {
   try {
     ValidateEnvironmentVariables();
-    
+    // const client= registerWebhookClientTron();
+    // const result= await trackTransactionByHashTron("cdd6f94f4943dd4508f79fcbffa897aeec475ce5d12a29a27cecfaca4f0497f4", client);
+    // console.log("result", result);
     console.log(`Server is running on port ${process.env.PORT}`);
   } catch (err) {
     console.error("Error validating environment variables:", err);
     process.exit(1);
   }
 });
+
