@@ -4,16 +4,12 @@ import dotenv from "dotenv";
 import { webhookRouter } from "./Routes/webhookRouter";
 import { verifyRouter } from "./Routes/Verify";
 import { monitorRouter } from "./Routes/Monitor";
+import { cleanupRouter } from "./Routes/Cleanup";
 import { EthereumProvider } from "./providers/Ethereum/EthereumProvider";
-import { TronProvider } from "./providers/Tron/TronProvider";import { trackTransactionByHashEthereum, trackTransactionByHashTron } from "./services/verify";
-import { registerWebhookClientTron } from "./services/TronService";
-;
+import { TronProvider } from "./providers/Tron/TronProvider";
+import { cleanupService } from "./services/cleanupService";
 
 dotenv.config();
-
-// Fix for duplicate address in webhook
-// Complete Tron Implementation
-// Can be done using Database to track the address
 
 const ValidateEnvironmentVariables = () => {
   if (!process.env.QUICK_NODE_API_KEY) {
@@ -44,18 +40,36 @@ app.use(express.json());
 app.use("/api/webhook", webhookRouter);
 app.use("/api/verify", verifyRouter);
 app.use("/api/monitor", monitorRouter);
+app.use("/api/cleanup", cleanupRouter);
 
 
 app.listen(process.env.PORT, async () => {
   try {
     ValidateEnvironmentVariables();
-    // const client= registerWebhookClientTron();
-    // const result= await trackTransactionByHashTron("cdd6f94f4943dd4508f79fcbffa897aeec475ce5d12a29a27cecfaca4f0497f4", client);
-    // console.log("result", result);
+    // Start the cleanup service for expired monitoring sessions
+    cleanupService.start();
     console.log(`Server is running on port ${process.env.PORT}`);
   } catch (err) {
     console.error("Error validating environment variables:", err);
     process.exit(1);
   }
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Received SIGINT. Gracefully shutting down...');
+  await ethereumProvider.PauseWebhook();
+  await tronProvider.PauseWebhook();
+  cleanupService.stop();
+  process.exit(0);
+});
+
+
+process.on('SIGTERM', async () => {
+  console.log('Received SIGTERM. Gracefully shutting down...');
+  await ethereumProvider.PauseWebhook();
+  await tronProvider.PauseWebhook();
+  cleanupService.stop();
+  process.exit(0);
 });
 

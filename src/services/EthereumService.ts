@@ -40,6 +40,7 @@ export const registerWebhook = async () => {
     const result = await axios.post(url, QUICKNODE_ETHEREUM_PAYLOAD, {
       headers: QUICKNODE_ETHEREUM_HEADERS,
     });
+    console.log("result", result.data);
     return result.data.id as string;
   } catch (err) {
     console.error("Error:", err);
@@ -124,7 +125,8 @@ export const startWebhook = async (webhookId: string) => {
       headers: QUICKNODE_ETHEREUM_HEADERS,
     });
     return true;
-  } catch (err) {
+  } catch (error:any) {
+    console.error("Error:", error.response?.data || error.message);
     return false;
   }
 };
@@ -136,8 +138,8 @@ export const deleteWebhook = async (webhookId: string) => {
       headers: QUICKNODE_ETHEREUM_HEADERS,
     });
     return result.data.id as string;
-  } catch (err) {
-    console.error("Error:", err);
+  } catch (error:any) {
+    console.error("Error:", error.response?.data || error.message);
   }
 };
 
@@ -148,8 +150,8 @@ export const GetWebhookInfo = async (webhookId: string) => {
       headers: QUICKNODE_ETHEREUM_HEADERS,
     });
     return result.data.destination_attributes;
-  } catch (err) {
-    console.error("Error:", err);
+  } catch (error:any) {
+    console.error("Error:", error.response?.data || error.message);
   }
 };
 /**
@@ -165,7 +167,7 @@ export const findValueOfToken = (
       "function transfer(address to, uint256 value)",
     ]);
     const decoded = iface.decodeFunctionData("transfer", input);
-    const valueInWei = decoded.value.toString(); // 300,000 (smallest units
+    const valueInWei = decoded.value.toString(); 
     const valueInToken = convertValuetoHumanFormat(valueInWei);
     return {
       amount: valueInToken,

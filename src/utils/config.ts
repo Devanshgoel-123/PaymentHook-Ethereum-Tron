@@ -3,7 +3,7 @@ export const USDT_TOKEN_TRON="TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
 export const USDT_DECIMALS=6;
 
 export const CHAIN_ID_ETHEREUM=1;
-export const CHAIN_ID_TRON=2;
+export const CHAIN_ID_TRON=728126428;
 
 
 export const TRANSFER_EVENT_SIG="0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"

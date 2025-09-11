@@ -40,15 +40,15 @@ webhookRouter.post("/ethereum", async (req: Request, res: Response) => {
   }
 });
 
-webhookRouter.post("/ethereum/update", async (req: Request, res: Response) => {
-  try {
-    const result= await ethereumProvider.UpdateWebhook(req.body.address);
-    res.status(SUCCESS_CODE).send({ message: "Ethereum webhook updated" });
-  } catch (err) {
-    console.error("Error updating Ethereum webhook:", err);
-    res.status(INTERNAL_ERROR_CODE).send({ error: "Failed to update Ethereum webhook" });
-  }
-});
+// webhookRouter.post("/ethereum/update", async (req: Request, res: Response) => {
+//   try {
+//     const result= await ethereumProvider.UpdateWebhook(req.body.address);
+//     res.status(SUCCESS_CODE).send({ message: "Ethereum webhook updated" });
+//   } catch (err) {
+//     console.error("Error updating Ethereum webhook:", err);
+//     res.status(INTERNAL_ERROR_CODE).send({ error: "Failed to update Ethereum webhook" });
+//   }
+// });
 
 /**
  * Tron webhook

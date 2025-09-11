@@ -11,7 +11,7 @@ config();
 
 export class EthereumProvider implements GeneralProvider {
   chaindId: number = CHAIN_ID_ETHEREUM;
-  webhookId: string = "d0216595-86c1-40ca-ba3c-863e6febac3a";
+  webhookId: string = "";
   USDT_ADDRESS: string = USDT_TOKEN_ETHEREUM;
 
   /**
@@ -23,6 +23,7 @@ export class EthereumProvider implements GeneralProvider {
         if(!result){
           throw new Error("Failed to register webhook");
         }
+        console.log("result", result);
         this.webhookId = result;
         return true;
     }catch(err){
