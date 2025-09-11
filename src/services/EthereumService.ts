@@ -2,6 +2,7 @@ import axios from "axios";
 import { BASE_QUICK_NODE_URL, TEMPLATE_ID } from "../utils/constants";
 import { ethers } from "ethers";
 import {config} from "dotenv";
+import { convertValuetoHumanFormat } from "./montior";
 config();
 const QUICKNODE_ETHEREUM_HEADERS={
   accept: "application/json",
@@ -41,9 +42,10 @@ export const registerWebhook = async () => {
 /**
  * Update a webhook
  */
-export const updateWebhook = async (userAddress:string) => {
+export const updateWebhook = async (userAddress:string, webhookId:string) => {
   try {
-    const url = `${BASE_QUICK_NODE_URL}/webhooks/rest/v1/webhooks/template/${TEMPLATE_ID}`;
+    const url = `${BASE_QUICK_NODE_URL}/webhooks/rest/v1/webhooks/${webhookId}`;
+    // Check if the userAddress is already in the wallets array
     const updatePayload = {
       ...QUICKNODE_ETHEREUM_PAYLOAD,
       templateArgs: {
@@ -51,7 +53,7 @@ export const updateWebhook = async (userAddress:string) => {
         wallets: [...QUICKNODE_ETHEREUM_PAYLOAD.templateArgs.wallets, userAddress],
       },
     };
-    const result = await axios.post(url, updatePayload, { headers: QUICKNODE_ETHEREUM_HEADERS });
+    const result = await axios.patch(url, updatePayload, { headers: QUICKNODE_ETHEREUM_HEADERS });
     console.log(result.data);
     return result.data.id as string;
   } catch (err) {
@@ -87,22 +89,32 @@ export const deleteWebhook = async (webhookId:string) => {
   }
 };
 
+
+export const GetWebhookInfo = async (webhookId:string) => {
+  try{
+    const url = `${BASE_QUICK_NODE_URL}/webhooks/rest/v1/webhooks/${webhookId}`;
+    const result = await axios.get(url, { headers: QUICKNODE_ETHEREUM_HEADERS });
+    console.log(result.data);
+    return result.data.destination_attributes;
+  }catch(err){
+    console.error("Error:", err);
+  }
+}
 /**
  * Find the value of a token
  * @param input 
  * @returns 
  */
-export const findValueOfToken=async(input:string)=>{
+export const findValueOfToken=(input:string):number | null=>{
     try{
         const iface = new ethers.Interface(["function transfer(address to, uint256 value)"]);
         const decoded = iface.decodeFunctionData("transfer", input);
-        const valueInWei = decoded.value.toString(); // 300,000 (smallest units)
-        console.log(valueInWei);
-        const decimals = 6; // For USDC
-        const valueInToken = valueInWei / Math.pow(10, decimals);
+        const valueInWei = decoded.value.toString(); // 300,000 (smallest units
+        const valueInToken = convertValuetoHumanFormat(valueInWei)
         return valueInToken;
     }catch(err){
         console.error("Error:", err);
+        return null;
     }
 }
 

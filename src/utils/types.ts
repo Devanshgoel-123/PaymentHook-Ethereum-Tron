@@ -35,3 +35,13 @@ export interface VerifyPaymentResult {
   transaction: TransactionInfo;
   payment_match: PaymentMatch;
 }
+
+
+export interface TransactionDataTron {
+    "0": string;   // from address
+    "1": string;   // to address
+    "2": string;   // value as string
+    from: string;  // from address
+    to: string;    // to address
+    value: string; // value as string
+  }

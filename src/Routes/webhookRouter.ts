@@ -2,7 +2,7 @@ import { Router } from "express";
 import { Request, Response } from "express";
 import { CompleteMerchantOrderTracking } from "../services/webhookHandler";
 import { INTERNAL_ERROR_CODE, SUCCESS_CODE } from "../utils/constants";
-import { ethereumProvider } from "../index";
+import { ethereumProvider, tronProvider } from "../index";
 export const webhookRouter = Router();
 
 /**
@@ -46,6 +46,7 @@ webhookRouter.post("/ethereum", async (req: Request, res: Response) => {
  */
 webhookRouter.get("/tron", async (req: Request, res: Response) => {
   try {
+    const result= await tronProvider.RegisterWebhook();
     res.status(SUCCESS_CODE).send({ message: "Tron webhook processed" });
   } catch (err) {
     console.error("Error processing Ethereum webhook:", err);

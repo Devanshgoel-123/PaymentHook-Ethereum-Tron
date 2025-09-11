@@ -1,7 +1,6 @@
 import { MonitoringSessions } from "../db/schema";
 import { db } from "../db/db";
 import { and, eq } from "drizzle-orm";
-import { findValueOfToken } from "./EthereumService";
 import { amountMatches } from "./EthereumService";
 /**
  * Create a monitoring session for an address
@@ -45,40 +44,58 @@ export const createMontioringSessionForAddress = async (
 export const completeMerchantOrderTracking = async (
   hash: string,
   tokenAddress: string,
-  input: string
+  humanAmount: number,
+  chainId:number
 ) => {
   try {
-    const humanAmount = await findValueOfToken(input);
-    if (!humanAmount) {
-      console.error("error finding value of token in human format");
-      return;
-    }
     const sessions = await db
       .select()
       .from(MonitoringSessions)
       .where(
         and(
           eq(MonitoringSessions.token, tokenAddress),
-          eq(MonitoringSessions.status, "pending")
+          eq(MonitoringSessions.status, "pending"),
+          eq(MonitoringSessions.chainId, chainId)
         )
       );
     for (const session of sessions) {
-      if (amountMatches(humanAmount, Number(session.amount))) {
-        await db
-          .update(MonitoringSessions)
-          .set({
-            status: "completed",
-            updatedAt: new Date(),
-            txHash: hash,
-            receivedAmount: humanAmount.toString(),
-          })
-          .where(eq(MonitoringSessions.id, session.id));
-      }
+        await updateOrderStatusInDB(session.id, hash, humanAmount, Number(session.amount));
     }
   } catch (err) {
     console.error("error completing merchant order tracking", err);
   }
 };
+
+/**
+ * Update order status in DB
+ * @param sessionId
+ * @param hash
+ * @param humanAmount
+ * @returns
+ */
+export const updateOrderStatusInDB=async(sessionId:number, hash:string, receivedAmount:number, expectedAmount:number):Promise<boolean>=>{
+  try{
+    if (amountMatches(receivedAmount, expectedAmount)){
+      const result=await db
+      .update(MonitoringSessions)
+      .set({
+        status: "completed",
+        updatedAt: new Date(),
+        txHash: hash,
+        receivedAmount: receivedAmount.toString(),
+      })
+      .where(eq(MonitoringSessions.id, sessionId)).returning();
+      if(!result[0]){
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }catch(err){
+    console.error("error updating order status in DB", err);
+    return false
+  }
+}
 
 /**
  * Get the status of a merchant order
@@ -103,3 +120,38 @@ export const getMerchantOrderStatus = async (
     return null;
   }
 };
+
+
+/**
+ * Get all active sessions for a chain
+ * @param chainId
+ * @returns
+ */
+export const getActiveSessions = async (chainId: number) => {
+  try {
+    const sessions = await db
+      .select()
+      .from(MonitoringSessions)
+      .where(eq(MonitoringSessions.chainId, chainId));
+    return sessions;
+  } catch (err) {
+    console.error("error getting active sessions", err);
+    return null;
+  }
+};
+
+/**
+ * Convert value to human format
+ * @param valueInWei 
+ * @returns 
+ */
+export const convertValuetoHumanFormat=(valueInWei:number):number | null=>{
+  try{
+    const decimals = 6; // For USDT
+    const valueInToken = valueInWei / Math.pow(10, decimals);
+    return valueInToken;
+  }catch(err){
+    console.error("error converting value to human format", err);
+    return null;
+  }
+}

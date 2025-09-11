@@ -5,9 +5,15 @@ import { webhookRouter } from "./Routes/webhookRouter";
 import { verifyRouter } from "./Routes/Verify";
 import { monitorRouter } from "./Routes/Monitor";
 import { EthereumProvider } from "./providers/Ethereum/EthereumProvider";
-import { trackTransactionByHash } from "./services/verify";
+import { TronProvider } from "./providers/Tron/TronProvider";
+import { trackTransactionByHashEthereum } from "./services/verify";
 
 dotenv.config();
+
+// Fix for duplicate address in webhook
+// Complete Tron Implementation
+// Can be done using Database to track the address
+
 
 const ValidateEnvironmentVariables = () => {
   if(!process.env.QUICK_NODE_API_KEY){
@@ -28,6 +34,7 @@ const ValidateEnvironmentVariables = () => {
 const app = express();
 
 export const ethereumProvider = new EthereumProvider();
+export const tronProvider = new TronProvider();
 
 
 app.use(cors());
@@ -39,7 +46,9 @@ app.use("/api/verify", verifyRouter);
 app.use("/api/monitor", monitorRouter);
 
 
-trackTransactionByHash("0xdc3504685dedba632acb4092592ed60e92425780e30740b06f89c0e21bd0513f")
+// trackTransactionByHash("0xdc3504685dedba632acb4092592ed60e92425780e30740b06f89c0e21bd0513f")
+tronProvider.RegisterWebhook()
+
 
 app.listen(process.env.PORT, () => {
   try{
@@ -50,3 +59,4 @@ app.listen(process.env.PORT, () => {
     process.exit(1);
   }
 });
+

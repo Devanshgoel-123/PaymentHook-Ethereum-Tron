@@ -35,6 +35,7 @@ export class EthereumProvider implements GeneralProvider {
    */
   async RegisterMonitoringSession(address:string, amount:string, token:string): Promise<number | null> {
     try{
+      await this.UpdateWebhook(address);
       const result=await createMontioringSessionForAddress(address, amount, token, this.chaindId);
       if(!result){
         throw new Error("Failed to register monitoring session");
@@ -54,7 +55,7 @@ export class EthereumProvider implements GeneralProvider {
       if(!userAddress){
         throw new Error("User address is required");
       }
-      const result=await updateWebhook(userAddress);
+      const result=await updateWebhook(userAddress, this.webhookId);
     }catch(err){
       console.error("Error updating webhook", err);
       throw new Error("Failed to update webhook");

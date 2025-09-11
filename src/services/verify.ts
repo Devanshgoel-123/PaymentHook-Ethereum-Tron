@@ -3,13 +3,14 @@ import { MonitoringSessions } from "../db/schema";
 import axios from "axios";
 import { and, eq } from "drizzle-orm";
 import { db } from "../db/db";
+import { TronWeb } from "tronweb";
 /**
  * Track a transaction by hash
  * @param hash 
  * @returns 
  */
 
-export const trackTransactionByHash=async(hash:string):Promise<VerifyTraxnResult | null>=>{
+export const trackTransactionByHashEthereum=async(hash:string):Promise<VerifyTraxnResult | null>=>{
     try{
         const requestPayload = {
             jsonrpc: "2.0",
@@ -47,6 +48,34 @@ export const trackTransactionByHash=async(hash:string):Promise<VerifyTraxnResult
               status: "completed"
             }
           };  
+    }catch(err){
+        console.error("error tracking transaction by hash", err);
+        return null;
+    }
+}
+
+/**
+ * Track a transaction by hash
+ * @param hash 
+ * @param client 
+ * @returns 
+ */
+export const trackTransactionByHashTron=async(hash:string, client:TronWeb)=>{
+    try{
+        const result=await client.trx.getTransaction(hash);
+        console.log(result.raw_data);
+        console.log(result.raw_data.contract);
+        // return {
+        //   verified: true,
+        //   transaction: {
+        //     hash: result.txID,
+        //     from: result,
+        //     to: result.to,
+        //     amount: result.value,
+        //     token: "USDT",
+        //     status: "completed"
+        //   }
+        // };
     }catch(err){
         console.error("error tracking transaction by hash", err);
         return null;

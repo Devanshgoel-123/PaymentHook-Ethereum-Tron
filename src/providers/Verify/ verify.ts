@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { trackTransactionByHash } from "../../services/verify";
+import { trackTransactionByHashEthereum } from "../../services/verify";
 import { INTERNAL_ERROR_CODE, SUCCESS_CODE } from "../../utils/constants";
 import { verifyTransactionByPayment } from "../../services/verify";
 import { BAD_REQUEST_CODE,  } from "../../utils/constants";
@@ -12,7 +12,7 @@ import { BAD_REQUEST_CODE,  } from "../../utils/constants";
 export const verifyTransactionByHash = async (req: Request, res: Response) => {
   try {
     const { hash } = req.body;
-    const result = await trackTransactionByHash(hash);
+    const result = await trackTransactionByHashEthereum(hash);
     res.status(200).send(result);
   } catch (err) {
     return res
