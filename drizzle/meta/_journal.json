@@ -22,6 +22,20 @@
       "when": 1757526501475,
       "tag": "0002_familiar_karnak",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1757593294621,
+      "tag": "0003_numerous_sasquatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1757593582845,
+      "tag": "0004_redundant_ultragirl",
+      "breakpoints": true
     }
   ]
 }

@@ -10,7 +10,7 @@ export interface GeneralProvider {
     
     RegisterWebhook:()=>Promise<boolean>;
 
-    UpdateWebhook:(userAddress:string)=>Promise<void>;
+    UpdateWebhook:(userAddress:string)=>Promise<boolean>;
 
     PauseWebhook:()=>Promise<void>;
 

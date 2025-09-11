@@ -9,12 +9,13 @@ export const webhookRouter = Router();
  * Webhook update
  */
 webhookRouter.post("/webhookUpdate", async (req: Request, res: Response) => {
+  console.log("Webhook update received");
   console.log(req.body.matchingTransactions);
   try {
     const matchingTransactions = req.body.matchingTransactions;
     const result = await CompleteMerchantOrderTracking(matchingTransactions);
     if (!result) {
-      return res.status(INTERNAL_ERROR_CODE).send({
+      return res.status(SUCCESS_CODE).send({
         message: "Webhook updated failed",
       });
     }
@@ -41,10 +42,20 @@ webhookRouter.post("/ethereum", async (req: Request, res: Response) => {
   }
 });
 
+webhookRouter.post("/ethereum/update", async (req: Request, res: Response) => {
+  try {
+    const result= await ethereumProvider.UpdateWebhook(req.body.address);
+    res.status(SUCCESS_CODE).send({ message: "Ethereum webhook updated" });
+  } catch (err) {
+    console.error("Error updating Ethereum webhook:", err);
+    res.status(INTERNAL_ERROR_CODE).send({ error: "Failed to update Ethereum webhook" });
+  }
+});
+
 /**
  * Tron webhook
  */
-webhookRouter.get("/tron", async (req: Request, res: Response) => {
+webhookRouter.post("/tron", async (req: Request, res: Response) => {
   try {
     const result= await tronProvider.RegisterWebhook();
     res.status(SUCCESS_CODE).send({ message: "Tron webhook processed" });

@@ -2,15 +2,16 @@ import { config } from "dotenv";
 import { GeneralProvider } from "../GeneralProvider";
 import { CHAIN_ID_ETHEREUM, USDT_TOKEN_ETHEREUM } from "../../utils/config";
 import { registerWebhook } from "../../services/EthereumService";
-import { trackTransactionByHash } from "../../services/verify";
+import { trackTransactionByHashEthereum } from "../../services/verify";
 import { VerifyTraxnResult } from "../../utils/types";
-import { updateWebhook, pauseWebhook, deleteWebhook } from "../../services/EthereumService";
+import { updateWebhook, pauseWebhook, deleteWebhook, startWebhook } from "../../services/EthereumService";
 import { createMontioringSessionForAddress } from "../../services/montior";
+
 config();
 
 export class EthereumProvider implements GeneralProvider {
   chaindId: number = CHAIN_ID_ETHEREUM;
-  webhookId: string = "";
+  webhookId: string = "d0216595-86c1-40ca-ba3c-863e6febac3a";
   USDT_ADDRESS: string = USDT_TOKEN_ETHEREUM;
 
   /**
@@ -35,10 +36,21 @@ export class EthereumProvider implements GeneralProvider {
    */
   async RegisterMonitoringSession(address:string, amount:string, token:string): Promise<number | null> {
     try{
-      await this.UpdateWebhook(address);
+      const response=await this.UpdateWebhook(address);
+      if(!response){
+        console.error("Failed to update webhook");
+        return null;
+      }
       const result=await createMontioringSessionForAddress(address, amount, token, this.chaindId);
+      const startResponse=await this.StartWebhook();
+      if(!startResponse){
+        console.error("Failed to start webhook");
+        return null;
+      }
+      //start the webhook also here
       if(!result){
-        throw new Error("Failed to register monitoring session");
+        console.error("Failed to register monitoring session");
+        return null;
       }
       return result;
     }catch(err){
@@ -50,15 +62,39 @@ export class EthereumProvider implements GeneralProvider {
  * Update a webhook
  * @param userAddress 
  */
-  async UpdateWebhook(userAddress:string): Promise<void> {
+  async UpdateWebhook(userAddress:string): Promise<boolean> {
     try{
+      await this.PauseWebhook();
       if(!userAddress){
-        throw new Error("User address is required");
+        console.error("User address is required");
+        return false;
       }
       const result=await updateWebhook(userAddress, this.webhookId);
+      if(!result){
+        console.error("Failed to update webhook");
+        return false;
+      }
+      return true;
     }catch(err){
       console.error("Error updating webhook", err);
-      throw new Error("Failed to update webhook");
+      return false;
+    }
+  }
+
+  /**
+   * Start a webhook
+   */
+  async StartWebhook(): Promise<boolean> {
+    try{
+      const result=await startWebhook(this.webhookId);
+      if(!result){
+        console.error("Failed to start webhook");
+        return false;
+      }
+      return true;
+    }catch(err){
+      console.error("Error starting webhook", err);
+     return false;
     }
   }
 
@@ -93,7 +129,7 @@ export class EthereumProvider implements GeneralProvider {
    */
   async VerifyTransaction(hash:string): Promise<VerifyTraxnResult| null> {
     try{
-      const result=await trackTransactionByHash(hash);
+      const result=await trackTransactionByHashEthereum(hash);
       if(!result){
         throw new Error("Failed to verify transaction");
       }

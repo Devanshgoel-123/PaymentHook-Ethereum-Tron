@@ -27,8 +27,8 @@ export class TronProvider implements GeneralProvider {
     }
   }
 
-  async UpdateWebhook(_userAddress: string): Promise<void> {
-    throw new Error("Method not implemented.");
+  async UpdateWebhook(_userAddress: string): Promise<boolean> {
+    return true;
   }
 
   async PauseWebhook(): Promise<void> {
@@ -127,10 +127,10 @@ export class TronProvider implements GeneralProvider {
                 console.log(
                   `Payment detected for ${session.address}: ${evt.value} USDT`
                 );
-               const result=await updateOrderStatusInDB(session.id, evt.hash, evt.value, expected);
-               if(!result){
-                console.error("Error updating order status in DB");
-               }
+              //  const result=await updateOrderStatusInDB(session.id, evt.hash, evt.value, expected);
+              //  if(!result){
+              //   console.error("Error updating order status in DB");
+              //  }
               }
             }
           }

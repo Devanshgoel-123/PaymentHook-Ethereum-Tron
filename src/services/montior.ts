@@ -2,6 +2,7 @@ import { MonitoringSessions } from "../db/schema";
 import { db } from "../db/db";
 import { and, eq } from "drizzle-orm";
 import { amountMatches } from "./EthereumService";
+import { MonitoringStatus } from "../utils/enum";
 /**
  * Create a monitoring session for an address
  * @param address
@@ -13,15 +14,16 @@ export const createMontioringSessionForAddress = async (
   chain: number
 ): Promise<number | null> => {
   try {
+    const userAddress = address.toLowerCase();
     const session = await db
       .insert(MonitoringSessions)
       .values({
-        address: address,
+        address: userAddress,
         amount: amount,
         token: token,
         chainId: chain,
         txHash: "",
-        status: "pending",
+        status: MonitoringStatus.Monitoring,
         createdAt: new Date(),
         updatedAt: new Date(),
         receivedAmount: "0",
@@ -45,21 +47,32 @@ export const completeMerchantOrderTracking = async (
   hash: string,
   tokenAddress: string,
   humanAmount: number,
-  chainId:number
+  chainId: number,
+  receiverAddress: string
 ) => {
   try {
+    console.log("starting to complete merchant order tracking", hash, tokenAddress, humanAmount, chainId, receiverAddress);
     const sessions = await db
       .select()
       .from(MonitoringSessions)
       .where(
         and(
-          eq(MonitoringSessions.token, tokenAddress),
-          eq(MonitoringSessions.status, "pending"),
-          eq(MonitoringSessions.chainId, chainId)
+          //  eq(MonitoringSessions.token, tokenAddress),
+          eq(MonitoringSessions.status, MonitoringStatus.Monitoring),
+          eq(MonitoringSessions.chainId, chainId),
+          eq(MonitoringSessions.address, receiverAddress.toLowerCase()),
+          eq(MonitoringSessions.status, MonitoringStatus.Monitoring)
         )
       );
+      console.log("sessions", sessions);
     for (const session of sessions) {
-        await updateOrderStatusInDB(session.id, hash, humanAmount, Number(session.amount));
+      await updateOrderStatusInDB(
+        session.id,
+        hash,
+        humanAmount,
+        Number(session.amount),
+        receiverAddress.toLowerCase()
+      );
     }
   } catch (err) {
     console.error("error completing merchant order tracking", err);
@@ -73,29 +86,40 @@ export const completeMerchantOrderTracking = async (
  * @param humanAmount
  * @returns
  */
-export const updateOrderStatusInDB=async(sessionId:number, hash:string, receivedAmount:number, expectedAmount:number):Promise<boolean>=>{
-  try{
-    if (amountMatches(receivedAmount, expectedAmount)){
-      const result=await db
-      .update(MonitoringSessions)
-      .set({
-        status: "completed",
-        updatedAt: new Date(),
-        txHash: hash,
-        receivedAmount: receivedAmount.toString(),
-      })
-      .where(eq(MonitoringSessions.id, sessionId)).returning();
-      if(!result[0]){
+export const updateOrderStatusInDB = async (
+  sessionId: number,
+  hash: string,
+  receivedAmount: number,
+  expectedAmount: number,
+  receiverAddress: string
+): Promise<boolean> => {
+  try {
+    if (amountMatches(receivedAmount, expectedAmount)) {
+      console.log("updating order status in DB", sessionId, hash, receivedAmount, expectedAmount, receiverAddress);
+      const result = await db
+        .update(MonitoringSessions)
+        .set({
+          status: "completed",
+          updatedAt: new Date(),
+          txHash: hash,
+          receivedAmount: receivedAmount.toString(),
+        })
+        .where(and(
+          eq(MonitoringSessions.id, sessionId),
+          eq(MonitoringSessions.address, receiverAddress)
+        ))
+        .returning();
+      if (!result[0]) {
         return false;
       }
       return true;
     }
     return false;
-  }catch(err){
+  } catch (err) {
     console.error("error updating order status in DB", err);
-    return false
+    return false;
   }
-}
+};
 
 /**
  * Get the status of a merchant order
@@ -121,7 +145,6 @@ export const getMerchantOrderStatus = async (
   }
 };
 
-
 /**
  * Get all active sessions for a chain
  * @param chainId
@@ -142,16 +165,18 @@ export const getActiveSessions = async (chainId: number) => {
 
 /**
  * Convert value to human format
- * @param valueInWei 
- * @returns 
+ * @param valueInWei
+ * @returns
  */
-export const convertValuetoHumanFormat=(valueInWei:number):number | null=>{
-  try{
+export const convertValuetoHumanFormat = (
+  valueInWei: number
+): number | null => {
+  try {
     const decimals = 6; // For USDT
     const valueInToken = valueInWei / Math.pow(10, decimals);
     return valueInToken;
-  }catch(err){
+  } catch (err) {
     console.error("error converting value to human format", err);
     return null;
   }
-}
+};

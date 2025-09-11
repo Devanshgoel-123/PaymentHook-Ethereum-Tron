@@ -1,9 +1,9 @@
 import { getMerchantOrderStatus } from "../../services/montior";
 import { Request, Response } from "express";
 import { BAD_REQUEST_CODE, INTERNAL_ERROR_CODE, SUCCESS_CODE } from "../../utils/constants";
-import { completeMerchantOrderTracking } from "../../services/montior";
 import { ethereumProvider, tronProvider } from "../../index";
 import { CHAIN_ID_ETHEREUM } from "../../utils/config";
+import { MonitoringStatus } from "../../utils/enum";
 /**
  * Create a merchant order session
  * @param req 
@@ -17,15 +17,19 @@ export const CreateMerchantOrderSessions=async (req:Request, res:Response) => {
             return res.status(BAD_REQUEST_CODE).json({message: "Invalid request"});
         }
         const provider= chain === CHAIN_ID_ETHEREUM ? ethereumProvider : tronProvider;
+        console.log(provider.USDT_ADDRESS);
         if(!provider){
             return res.status(INTERNAL_ERROR_CODE).json({message: "Provider not found"});
         }
         const session = await provider.RegisterMonitoringSession(address, amount, token);
+        if(!session){
+            return res.status(INTERNAL_ERROR_CODE).json({message: "Failed to register monitoring session"});
+        }
         const resultObject={
             sessionId:session,
             address:address,
             expectedAmount:amount,
-            status:"pending"
+            status:MonitoringStatus.Monitoring
         }
         res.status(SUCCESS_CODE).json({
             result:resultObject
@@ -64,13 +68,13 @@ export const CreateMerchantOrderSessions=async (req:Request, res:Response) => {
  */
 export const GetMerchantOrderStatus=async (req:Request, res:Response) => {
     try{
-        const {sessionId} = req.params;
+        const {sessionId} = req.query;
         if(!sessionId){
             return res.status(BAD_REQUEST_CODE).json({message: "Incorrect Session ID"});
         } 
         const status = await getMerchantOrderStatus(Number(sessionId));
         if(!status){
-            return res.status(INTERNAL_ERROR_CODE).json({message: "Session not found"});
+            return res.status(SUCCESS_CODE).json({message: "Session not found"});
         }
         res.status(SUCCESS_CODE).json({status:status});
     }catch(err){

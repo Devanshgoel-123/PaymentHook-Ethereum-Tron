@@ -13,3 +13,12 @@ export const MonitoringSessions=pgTable("monitoring_sessions", {
     chainId:integer().notNull(),
   });
   
+
+export const activeUsers=pgTable("active_users", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  address: varchar({ length: 255 }).notNull(),
+  status: varchar({ length: 255 }).notNull().default("active"),
+  count:integer().notNull().default(0),
+  createdAt: timestamp().notNull().defaultNow(),
+  chainId:integer().notNull(),
+})
