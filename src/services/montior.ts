@@ -61,11 +61,14 @@ export const completeMerchantOrderTracking = async (
           eq(MonitoringSessions.token, tokenAddress),
           eq(MonitoringSessions.status, MonitoringStatus.Monitoring),
           eq(MonitoringSessions.chainId, chainId),
-          eq(MonitoringSessions.address, receiverAddress.toLowerCase()),
-          eq(MonitoringSessions.status, MonitoringStatus.Monitoring)
+          eq(MonitoringSessions.address, receiverAddress.toLowerCase())
         )
       );
-    for (const session of sessions) {
+      if (sessions.length > 0) {
+      const session = sessions[0];
+      if (!session) {
+        return;
+      }
       await updateOrderStatusInDB(
         session.id,
         hash,
@@ -74,7 +77,7 @@ export const completeMerchantOrderTracking = async (
         receiverAddress.toLowerCase(),
         chainId
       );
-    }
+      }
   } catch (err) {
     console.error("error completing merchant order tracking", err);
   }
@@ -97,7 +100,6 @@ export const updateOrderStatusInDB = async (
 ): Promise<boolean> => {
   try {
     if (amountMatches(receivedAmount, expectedAmount)) {
-      console.log("updating order status in DB", sessionId, hash, receivedAmount, expectedAmount, receiverAddress);
       const result = await db
         .update(MonitoringSessions)
         .set({

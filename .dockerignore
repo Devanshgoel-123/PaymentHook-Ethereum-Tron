@@ -1,0 +1,9 @@
+node_modules
+dist
+tests
+Dockerfile
+.dockerignore
+.git
+.gitignore
+*.log
+*.tsbuildinfo

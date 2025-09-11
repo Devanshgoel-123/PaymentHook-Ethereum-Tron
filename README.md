@@ -47,8 +47,7 @@ A blockchain payment monitoring and verification service that tracks transaction
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd PaymentHook-Ethereum-Tron
+git clone https://github.com/Devanshgoel-123/PaymentHook-Ethereum-Tron.git
 ```
 
 ### 2. Install Dependencies
@@ -73,6 +72,9 @@ QUICK_NODE_API_KEY=your_quicknode_api_key
 
 # Webhook Configuration
 WEBHOOK_URL=https://your-domain.com/api/webhooks
+
+# TronApi Key
+TRON_API_KEY=your_tron_api_key
 ```
 
 ### 4. Database Setup
@@ -90,9 +92,6 @@ npx drizzle-kit migrate
 ```bash
 # Development mode
 npm run dev
-
-# Production mode
-npm start
 ```
 
 The server will start on `http://localhost:3000`
@@ -100,101 +99,23 @@ The server will start on `http://localhost:3000`
 ## 📚 API Documentation
 
 ### Base URL
+
 ```
 http://localhost:3000/api
-```
-
-### Endpoints
-
-#### Merchant Routes (`/api/merchant`)
-
-##### Verify Transaction
-```http
-POST /api/merchant/verifyTransaction
-```
-
-**Request Body:**
-```json
-{
-  "hash": "0x...",
-  "address": "0x...",
-  "amount": "100.50",
-  "token": "USDC"
-}
-```
-
-**Response:**
-```json
-{
-  "verified": true,
-  "transaction": {
-    "hash": "0x...",
-    "from": "0x...",
-    "to": "0x...",
-    "amount": "100.50",
-    "token": "USDC",
-    "status": "confirmed"
-  }
-}
-```
-
-#### Webhook Routes (`/api/webhook`)
-
-##### Ethereum Webhook
-```http
-POST /api/webhooks/ethereum
-```
-
-##### Tron Webhook
-```http
-POST /api/webhooks/tron
-```
-
-#### Verification Routes (`/api/verify`)
-
-##### Verify Payment
-```http
-POST /api/verify/payment
-```
-
-**Request Body:**
-```json
-{
-  "sessionId": 123,
-  "expectedAmount": "100.50",
-  "token": "USDC"
-}
-```
-
-#### Monitoring Routes (`/api/monitor`)
-
-##### Create Monitoring Session
-```http
-POST /api/monitor/session
-```
-
-**Request Body:**
-```json
-{
-  "address": "0x...",
-  "amount": "100.50",
-  "token": "USDC",
-  "chainId": 1
-}
 ```
 
 ## 🔧 Configuration
 
 ### Supported Networks
 
-| Network | Chain ID | Confirmations Required |
-|---------|----------|----------------------|
-| Ethereum | 1 | 20 |
-| Tron | 2 | 10 |
+| Network  | Chain ID |
+| -------- | -------- | 
+| Ethereum | 1        | 
+| Tron     | 2        | 
 
 ### Supported Tokens
 
-- **Ethereum**: USDC, USDT, ETH
+- **Ethereum**: USDT
 - **Tron**: USDT (TRC20)
 
 ### Webhook Configuration
@@ -216,32 +137,6 @@ The service integrates with QuickNode webhooks to monitor wallet addresses:
 }
 ```
 
-## 🗄️ Database Schema
-
-### Monitoring Sessions
-
-```sql
-CREATE TABLE monitoring_sessions (
-  id SERIAL PRIMARY KEY,
-  address VARCHAR(255) NOT NULL,
-  amount VARCHAR(255) NOT NULL,
-  receivedAmount VARCHAR(255) NOT NULL,
-  token VARCHAR(255) NOT NULL,
-  txHash VARCHAR(255) DEFAULT '',
-  chainId INTEGER NOT NULL,
-  status VARCHAR(255) NOT NULL DEFAULT 'pending',
-  createdAt TIMESTAMP NOT NULL DEFAULT NOW(),
-  updatedAt TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
-## 🔄 Workflow
-
-1. **Merchant Setup**: Merchant creates a monitoring session for a specific address and amount
-2. **Webhook Registration**: System registers webhook with QuickNode to monitor the address
-3. **Transaction Detection**: When a transaction occurs, webhook is triggered
-4. **Verification**: System verifies the transaction amount and updates the session
-5. **Notification**: Merchant receives confirmation of payment completion
 
 ## 🧪 Testing
 
@@ -249,13 +144,6 @@ CREATE TABLE monitoring_sessions (
 # Run tests (when implemented)
 npm test
 
-# Test webhook endpoints
-curl -X POST http://localhost:3000/api/webhooks/ethereum \
-  -H "Content-Type: application/json" \
-  -d '{"test": "data"}'
-```
-
-## 🚀 Deployment
 
 ### Environment Variables for Production
 
@@ -267,18 +155,6 @@ QUICK_NODE_API_KEY=...
 WEBHOOK_URL=https://your-domain.com
 ```
 
-### Docker Deployment (Optional)
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
 
 ## 📝 Development
 
@@ -291,7 +167,6 @@ src/
 ├── Routes/             # Express route handlers
 ├── services/           # Business logic services
 ├── utils/              # Utility functions and constants
-└── webhooks/           # Webhook handling logic
 ```
 
 ### Adding New Chains
@@ -312,22 +187,6 @@ src/
 ## 📄 License
 
 This project is licensed under the ISC License.
-
-## 🆘 Support
-
-For support and questions:
-
-- Create an issue in the repository
-- Contact: devanshgoel112233@gmail.com
-
-## 🔮 Roadmap
-
-- [ ] Add support for more blockchain networks
-- [ ] Implement payment retry mechanisms
-- [ ] Add comprehensive logging and monitoring
-- [ ] Create admin dashboard
-- [ ] Add rate limiting and security enhancements
-- [ ] Implement automated testing suite
 
 ---
 
