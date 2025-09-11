@@ -10,9 +10,10 @@ export const webhookRouter = Router();
  */
 webhookRouter.post("/webhookUpdate", async (req: Request, res: Response) => {
   console.log("Webhook update received");
-  console.log(req.body.matchingTransactions);
+  console.log(req.body.matchingReceipts);
   try {
-    const matchingTransactions = req.body.matchingTransactions;
+    const matchingTransactions = req.body.matchingReceipts;
+    console.log("matchingTransactions", matchingTransactions[0].logs);
     const result = await CompleteMerchantOrderTracking(matchingTransactions);
     if (!result) {
       return res.status(SUCCESS_CODE).send({

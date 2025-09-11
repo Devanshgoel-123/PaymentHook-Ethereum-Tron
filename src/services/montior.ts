@@ -1,8 +1,9 @@
 import { MonitoringSessions } from "../db/schema";
 import { db } from "../db/db";
 import { and, eq } from "drizzle-orm";
-import { amountMatches } from "./EthereumService";
+import { amountMatches, decrementUserCountInDB } from "./EthereumService";
 import { MonitoringStatus } from "../utils/enum";
+import { CHAIN_ID_ETHEREUM } from "../utils/config";
 /**
  * Create a monitoring session for an address
  * @param address
@@ -109,6 +110,8 @@ export const updateOrderStatusInDB = async (
           eq(MonitoringSessions.address, receiverAddress)
         ))
         .returning();
+
+    await decrementUserCountInDB(receiverAddress.toLowerCase(), CHAIN_ID_ETHEREUM);
       if (!result[0]) {
         return false;
       }

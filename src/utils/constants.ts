@@ -6,3 +6,5 @@ export const TRANSACTIONS_CONFIRMATIONS_ETHEREUM=20;
 export const TRANSACTIONS_CONFIRMATIONS_TRON=10;
 export const BASE_QUICK_NODE_URL="https://api.quicknode.com";
 export const TEMPLATE_ID='evmWalletFilter'
+
+
