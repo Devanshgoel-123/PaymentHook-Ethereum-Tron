@@ -113,7 +113,7 @@ export class TronProvider implements GeneralProvider {
       const events = await this.client.getEventResult(this.USDT_ADDRESS, {
         eventName: "Transfer",
         onlyConfirmed: true,
-        limit: 10, //max-limit is 200
+        limit: 100, //max-limit is 200
       });
 
       const eventsFormatted = events.data
